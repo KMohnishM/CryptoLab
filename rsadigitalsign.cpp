@@ -1,95 +1,124 @@
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
-using namespace std;
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
+// Fast modular exponentiation
 long long power(long long base, long long exp, long long mod) {
-    long long result = 1;
+    long long res = 1;
     base %= mod;
     while (exp > 0) {
         if (exp & 1)
-            result = (result * base) % mod;
+            res = (res * base) % mod;
         base = (base * base) % mod;
         exp >>= 1;
     }
-    return result;
+    return res;
 }
 
-vector<int> primeFactors(int n) {
-    vector<int> factors;
-    for (int i = 2; i * i <= n; i++) {
-        if (n % i == 0) {
-            factors.push_back(i);
-            while (n % i == 0)
-                n /= i;
-        }
-    }
-    if (n > 1)
-        factors.push_back(n);
-    return factors;
+// Check prime
+int isPrime(int n) {
+    if (n <= 1) return 0;
+    int limit = sqrt(n);
+    for (int i = 2; i <= limit; i++)
+        if (n % i == 0) return 0;
+    return 1;
 }
 
-vector<int> primitiveRoots(int p) {
-    vector<int> roots;
-    int phi = p - 1;
-    vector<int> factors = primeFactors(phi);
+// Find next prime >= n
+long long nextPrime(long long n) {
+    while (!isPrime(n)) n++;
+    return n;
+}
 
-    for (int g = 2; g < p; g++) {
-        bool isPrimitive = true;
-        for (int f : factors) {
-            if (power(g, phi / f, p) == 1) {
-                isPrimitive = false;
-                break;
-            }
-        }
-        if (isPrimitive)
-            roots.push_back(g);
+// GCD
+long long gcd(long long a, long long b) {
+    while (b != 0) {
+        long long t = b;
+        b = a % b;
+        a = t;
     }
-    return roots;
+    return a;
+}
+
+// Extended Euclidean Algorithm
+long long modInverse(long long e, long long phi) {
+    long long t = 0, newt = 1;
+    long long r = phi, newr = e;
+
+    while (newr != 0) {
+        long long q = r / newr;
+
+        long long temp = newt;
+        newt = t - q * newt;
+        t = temp;
+
+        temp = newr;
+        newr = r - q * newr;
+        r = temp;
+    }
+
+    if (r > 1) return -1; // no inverse
+    if (t < 0) t += phi;
+
+    return t;
+}
+
+// Simple hash (sum of ASCII values)
+long long hashMessage(char *msg) {
+    long long hash = 0;
+    for (int i = 0; i < strlen(msg); i++)
+        hash += msg[i];
+    return hash;
 }
 
 int main() {
-    int p;
-    cout << "Enter a prime number p: ";
-    cin >> p;
+    long long start;
 
-    vector<int> roots = primitiveRoots(p);
+    printf("Enter starting number (from reg no): ");
+    scanf("%lld", &start);
 
-    cout << "\nPrimitive Roots of " << p << ":\n";
-    for (int g : roots)
-        cout << g << " ";
-    cout << endl;
+    // Generate primes
+    long long p = nextPrime(start + 1);
+    long long q = nextPrime(p + 1);
 
-    
-    // int g = roots[rand() % roots.size()];
-    int g = roots[0];
+    printf("\nGenerated primes:\n");
+    printf("p = %lld, q = %lld\n", p, q);
 
-    cout << "\nRandomly selected primitive root g = " << g << endl;
+    // RSA calculations
+    long long n = p * q;
+    long long phi = (p - 1) * (q - 1);
 
-    int a, b;
-    cout << "Enter Alice's private key (a): ";
-    cin >> a;
-    cout << "Enter Bob's private key (b): ";
-    cin >> b;
+    long long e = 3;
+    while (gcd(e, phi) != 1) e++;
 
-    long long A = power(g, a, p);
-    long long B = power(g, b, p);
+    long long d = modInverse(e, phi);
 
-    cout << "\nAlice sends A = g^a mod p = " << A;
-    cout << "\nBob sends B = g^b mod p = " << B << endl;
+    printf("\nRSA Keys:\n");
+    printf("Public Key (e, n): (%lld, %lld)\n", e, n);
+    printf("Private Key (d, n): (%lld, %lld)\n", d, n);
 
-    long long s1 = power(B, a, p);
-    long long s2 = power(A, b, p);
+    // Input name
+    char name[100];
+    printf("\nEnter your name: ");
+    scanf(" %[^\n]", name);
 
-    cout << "\nShared Secret (Alice): " << s1;
-    cout << "\nShared Secret (Bob): " << s2 << endl;
+    // Hashing
+    long long hash = hashMessage(name);
+    printf("\nMessage: %s\n", name);
+    printf("Hash value: %lld\n", hash);
 
-    if (s1 == s2)
-        cout << "\nKey Exchange Successful ";
+    // Signing
+    long long signature = power(hash, d, n);
+    printf("\nDigital Signature: %lld\n", signature);
+
+    // Verification
+    long long recovered = power(signature, e, n);
+    printf("\nRecovered Hash: %lld\n", recovered);
+
+    if (recovered == hash)
+        printf("Verification Status: Signature Verified Successfully \n");
     else
-        cout << "\nKey Exchange Failed ";
+        printf("Verification Status: Failed \n");
 
     return 0;
 }
