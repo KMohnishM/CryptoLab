@@ -63,7 +63,7 @@ int main() {
     cout << endl;
 
     
-    srand(time(0));
+    // int g = roots[rand() % roots.size()];
     int g = roots[0];
 
     cout << "\nRandomly selected primitive root g = " << g << endl;
