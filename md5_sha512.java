@@ -1,5 +1,5 @@
 import java.security.MessageDigest;
-
+import java.util.*;
 public class md5_sha512{
 
     public static String hash(String input, String algorithm) throws Exception {
@@ -14,8 +14,10 @@ public class md5_sha512{
     }
 
     public static void main(String[] args) throws Exception {
-        String message = "HelloWorld";
-
+        Scanner input=new Scanner(System.in);
+        String message=input.nextLine();
+        // String message = "HelloWorld";
+        
         System.out.println("MD5: " + hash(message, "MD5"));
         System.out.println("SHA-512: " + hash(message, "SHA-512"));
     }
